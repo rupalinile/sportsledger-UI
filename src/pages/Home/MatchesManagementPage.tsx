@@ -51,6 +51,7 @@ import { getApiErrorMessage } from "../../utils/apiError";
 const { Text } = Typography;
 
 const ALL_MATCHES_VALUE = -1;
+const ALL_SELECTION_TEAM_ID = 0;
 const ALL_PAYMENT_STATUSES_VALUE = "ALL";
 
 type PaymentStatusFilter = typeof ALL_PAYMENT_STATUSES_VALUE | MatchPaymentPayloadStatus;
@@ -97,6 +98,16 @@ const paymentStatusFilterOptions = [
   { label: "All Payment Status", value: ALL_PAYMENT_STATUSES_VALUE },
   ...paymentStatusOptions
 ];
+
+const mergePlayersById = (playerGroups: Player[][]): Player[] => {
+  const playersById = new Map<number, Player>();
+
+  playerGroups.flat().forEach((player) => {
+    playersById.set(player.id, player);
+  });
+
+  return Array.from(playersById.values());
+};
 
 const formatCurrency = (value: number | null | undefined): string =>
   new Intl.NumberFormat("en-IN", {
@@ -342,14 +353,33 @@ export const MatchesManagementPage = (): JSX.Element => {
     return plannerMatches.filter((match) => dayjs(match.match_date).isSame(plannerModalDate, "day"));
   }, [plannerMatches, plannerModalDate]);
 
-  const playerOptions = useMemo(
-    () =>
-      players.map((player) => ({
-        label: player.player_name,
-        value: player.id
-      })),
-    [players]
-  );
+  const playerOptions = useMemo(() => {
+    const teamPlayers = players.filter((player) => player.team_id !== ALL_SELECTION_TEAM_ID);
+    const commonPlayers = players.filter((player) => player.team_id === ALL_SELECTION_TEAM_ID);
+    const options = [];
+
+    if (teamPlayers.length > 0) {
+      options.push({
+        label: `${completingMatch?.my_team_name ?? "Team"} Players`,
+        options: teamPlayers.map((player) => ({
+          label: player.player_name,
+          value: player.id
+        }))
+      });
+    }
+
+    if (commonPlayers.length > 0) {
+      options.push({
+        label: "Common Players",
+        options: commonPlayers.map((player) => ({
+          label: player.player_name,
+          value: player.id
+        }))
+      });
+    }
+
+    return options;
+  }, [completingMatch?.my_team_name, players]);
 
   const renderPlannerCard = (item: PlannerDateItem, index: number): JSX.Element => {
     if (!item.date) {
@@ -520,8 +550,16 @@ export const MatchesManagementPage = (): JSX.Element => {
     });
 
     try {
-      const response = await playerService.getPlayers({ teamId: match.my_team_id });
-      setPlayers(response.data);
+      const playerRequests =
+        match.my_team_id === ALL_SELECTION_TEAM_ID
+          ? [playerService.getPlayers({ teamId: ALL_SELECTION_TEAM_ID })]
+          : [
+              playerService.getPlayers({ teamId: match.my_team_id }),
+              playerService.getPlayers({ teamId: ALL_SELECTION_TEAM_ID })
+            ];
+      const playerResponses = await Promise.all(playerRequests);
+
+      setPlayers(mergePlayersById(playerResponses.map((response) => response.data)));
     } catch (error) {
       messageApi.error(getApiErrorMessage(error, "Unable to load players for this match."));
       setPlayers([]);

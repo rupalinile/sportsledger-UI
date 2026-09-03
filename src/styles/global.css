@@ -1125,6 +1125,66 @@ body {
   font-size: 16px;
 }
 
+.application-update {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+}
+
+.application-update__eyebrow {
+  color: #9b1b30;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.application-update h3.ant-typography {
+  margin: 0;
+  color: #0f1d31;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.application-update__state,
+.application-update__details {
+  display: grid;
+  gap: 20px;
+}
+
+.application-update__state {
+  min-height: 220px;
+  align-content: center;
+}
+
+.application-update__details .ant-descriptions {
+  background: #ffffff;
+}
+
+.application-update__details .ant-descriptions-item-label {
+  width: 190px;
+  color: #0f1d31;
+  font-weight: 600;
+  background: #fbfcfe;
+}
+
+.application-update__notes.ant-typography {
+  margin: 0;
+  color: #596579;
+  white-space: pre-wrap;
+}
+
+.application-update__actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.application-update__actions .ant-btn-primary,
+.application-update__state .ant-btn-primary {
+  background: #f63f67;
+  box-shadow: none;
+}
+
 @media (max-width: 1180px) {
   .auth-form-grid {
     grid-template-columns: 1fr;

@@ -2,6 +2,7 @@ import {
   CalendarOutlined,
   DashboardOutlined,
   DollarCircleOutlined,
+  SyncOutlined,
   TeamOutlined,
   UserOutlined,
   WalletOutlined
@@ -23,6 +24,7 @@ const routeIcons: Record<AppRoute, JSX.Element> = {
   [ROUTES.SQUAD]: <TeamOutlined />,
   [ROUTES.PLAYER_EXPENSES]: <UserOutlined />,
   [ROUTES.TEAM_EXPENSES]: <DollarCircleOutlined />,
+  [ROUTES.APPLICATION_UPDATE]: <SyncOutlined />,
   [ROUTES.LOGIN]: <WalletOutlined />,
   [ROUTES.REGISTER]: <WalletOutlined />
 };

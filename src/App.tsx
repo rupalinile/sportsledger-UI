@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "./layouts/AppShell";
+import { ApplicationUpdatePage } from "./pages/ApplicationUpdate/ApplicationUpdatePage";
 import { LoginPage } from "./pages/Auth/LoginPage";
 import { RegisterPage } from "./pages/Auth/RegisterPage";
 import { HomePage } from "./pages/Home/HomePage";
@@ -9,6 +10,7 @@ import { SquadManagementPage } from "./pages/Home/SquadManagementPage";
 import { TeamExpensesPage } from "./pages/Home/TeamExpensesPage";
 import { LOCAL_STORAGE_KEYS } from "./constants/app.constants";
 import { ROUTES } from "./constants/routes";
+import { useAppUpdate } from "./contexts/AppUpdateContext";
 import type { AuthSubscription } from "./types/auth";
 import type { AppRoute } from "./types/navigation";
 import { isAppRoute } from "./utils/navigation";
@@ -34,10 +36,23 @@ const getStartupRoute = (): AppRoute => {
   return ROUTES.LOGIN;
 };
 
-const getAllowedRoute = (route: AppRoute, subscription: AuthSubscription | null): AppRoute => {
+const getAllowedRoute = (
+  route: AppRoute,
+  subscription: AuthSubscription | null,
+  isUpdatePageRequired: boolean
+): AppRoute => {
+  if (isUpdatePageRequired && route !== ROUTES.APPLICATION_UPDATE) {
+    return ROUTES.APPLICATION_UPDATE;
+  }
+
   const isAuthRoute = route === ROUTES.LOGIN || route === ROUTES.REGISTER;
 
-  if (isFreeSubscription(subscription) && !isAuthRoute && route !== ROUTES.HOME) {
+  if (
+    isFreeSubscription(subscription) &&
+    !isAuthRoute &&
+    route !== ROUTES.HOME &&
+    route !== ROUTES.APPLICATION_UPDATE
+  ) {
     return ROUTES.HOME;
   }
 
@@ -45,13 +60,14 @@ const getAllowedRoute = (route: AppRoute, subscription: AuthSubscription | null)
 };
 
 const App = (): JSX.Element => {
+  const { isUpdatePageRequired, isUpdateBlocking } = useAppUpdate();
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getStartupRoute);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [subscription, setSubscription] = useState<AuthSubscription | null>(null);
 
   useEffect(() => {
     const handlePopState = (): void => {
-      const nextRoute = getAllowedRoute(getCurrentRoute(), subscription);
+      const nextRoute = getAllowedRoute(getCurrentRoute(), subscription, isUpdatePageRequired);
 
       if (nextRoute !== window.location.pathname) {
         window.history.replaceState(null, "", nextRoute);
@@ -63,10 +79,32 @@ const App = (): JSX.Element => {
     window.addEventListener("popstate", handlePopState);
 
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [subscription]);
+  }, [isUpdatePageRequired, subscription]);
+
+  useEffect(() => {
+    const nextRoute = getAllowedRoute(currentRoute, subscription, isUpdatePageRequired);
+
+    if (nextRoute !== currentRoute) {
+      window.history.replaceState(null, "", nextRoute);
+      setCurrentRoute(nextRoute);
+    }
+  }, [currentRoute, isUpdatePageRequired, subscription]);
+
+  useEffect(() => {
+    if (
+      currentRoute === ROUTES.APPLICATION_UPDATE &&
+      !isUpdatePageRequired &&
+      !isUpdateBlocking
+    ) {
+      const nextRoute = isAuthenticated ? ROUTES.HOME : ROUTES.LOGIN;
+
+      window.history.replaceState(null, "", nextRoute);
+      setCurrentRoute(nextRoute);
+    }
+  }, [currentRoute, isAuthenticated, isUpdateBlocking, isUpdatePageRequired]);
 
   const handleNavigate = (route: AppRoute): void => {
-    const nextRoute = getAllowedRoute(route, subscription);
+    const nextRoute = getAllowedRoute(route, subscription, isUpdatePageRequired);
 
     window.history.pushState(null, "", nextRoute);
     setCurrentRoute(nextRoute);
@@ -94,6 +132,10 @@ const App = (): JSX.Element => {
       return <RegisterPage onNavigate={handleNavigate} />;
     }
 
+    if (currentRoute === ROUTES.APPLICATION_UPDATE) {
+      return <ApplicationUpdatePage />;
+    }
+
     if (currentRoute === ROUTES.HOME) {
       return <HomePage onNavigate={handleNavigate} />;
     }
@@ -116,6 +158,10 @@ const App = (): JSX.Element => {
 
     return <HomePage onNavigate={handleNavigate} />;
   };
+
+  if (currentRoute === ROUTES.APPLICATION_UPDATE || isUpdatePageRequired || isUpdateBlocking) {
+    return <ApplicationUpdatePage />;
+  }
 
   if (currentRoute === ROUTES.LOGIN) {
     return <LoginPage onNavigate={handleNavigate} onLoginComplete={handleLoginComplete} />;

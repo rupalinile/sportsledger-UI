@@ -37,5 +37,8 @@ export const API_ENDPOINTS = {
   },
   DASHBOARD: {
     SUMMARY: "/dashboard/summary"
+  },
+  APP: {
+    VERSION_CHECK: "/app/version-check"
   }
 } as const;

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ELECTRON_COLORS, ELECTRON_WINDOW } from "./constants.js";
@@ -6,6 +6,21 @@ import { ELECTRON_COLORS, ELECTRON_WINDOW } from "./constants.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const appIconPath = path.join(__dirname, "../build/icon.png");
+
+const registerAppIpcHandlers = (): void => {
+  ipcMain.handle("app:get-version", () => app.getVersion());
+  ipcMain.handle("app:open-external", async (_event, url: string): Promise<boolean> => {
+    const parsedUrl = new URL(url);
+
+    if (parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:") {
+      throw new Error("Only HTTP(S) URLs can be opened externally.");
+    }
+
+    await shell.openExternal(parsedUrl.toString());
+
+    return true;
+  });
+};
 
 const createMainWindow = (): void => {
   const mainWindow = new BrowserWindow({
@@ -17,7 +32,7 @@ const createMainWindow = (): void => {
     icon: appIconPath,
     backgroundColor: ELECTRON_COLORS.BACKGROUND,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "../electron/preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -36,6 +51,7 @@ const createMainWindow = (): void => {
 };
 
 app.whenReady().then(() => {
+  registerAppIpcHandlers();
   createMainWindow();
 
   app.on("activate", () => {

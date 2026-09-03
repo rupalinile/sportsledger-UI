@@ -5,6 +5,10 @@ export const APP_CONFIG = {
   HEADER_HEIGHT: 64
 } as const;
 
+export const APP_UPDATE_CONFIG = {
+  PLATFORM: "windows"
+} as const;
+
 export const LOCAL_STORAGE_KEYS = {
   THEME_MODE: "sportsledger.themeMode",
   ACCESS_TOKEN: "sportsledger.accessToken",

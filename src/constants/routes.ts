@@ -4,6 +4,7 @@ export const ROUTES = {
   SQUAD: "/squad",
   PLAYER_EXPENSES: "/player-expenses",
   TEAM_EXPENSES: "/team-expenses",
+  APPLICATION_UPDATE: "/application-update",
   LOGIN: "/login",
   REGISTER: "/register"
 } as const;
@@ -14,6 +15,7 @@ export const ROUTE_LABELS = {
   [ROUTES.SQUAD]: "Squad Management",
   [ROUTES.PLAYER_EXPENSES]: "Player Expense Management",
   [ROUTES.TEAM_EXPENSES]: "Team Expenses",
+  [ROUTES.APPLICATION_UPDATE]: "Application Update",
   [ROUTES.LOGIN]: "Login",
   [ROUTES.REGISTER]: "Registration"
 } as const;

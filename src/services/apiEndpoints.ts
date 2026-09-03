@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
     BY_PLAYER_ID: (playerId: number) => `/player-expenses/${playerId}`
   },
   TEAM_EXPENSES: {
+    SUMMARY_ALL: "/team-expenses/summary",
     SUMMARY: (teamId: number) => `/team-expenses/summary/${teamId}`,
     TRANSACTIONS: (teamId: number) => `/team-expenses/transactions/${teamId}`,
     TRANSACTION_DETAIL: (transactionId: number) =>

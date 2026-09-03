@@ -111,17 +111,19 @@ export const TeamExpensesPage = (): JSX.Element => {
 
       setTeams(loadedTeams);
 
-      const teamIds =
-        teamId === ALL_TEAMS_VALUE ? loadedTeams.map((team) => team.id) : [teamId];
+      const isAllTeamsSelected = teamId === ALL_TEAMS_VALUE;
+      const teamIds = isAllTeamsSelected ? loadedTeams.map((team) => team.id) : [teamId];
 
-      const [summaryResponses, transactionResponses] = await Promise.all([
-        Promise.all(teamIds.map((currentTeamId) => teamExpenseService.getSummary(currentTeamId))),
+      const [summaryResponse, transactionResponses] = await Promise.all([
+        isAllTeamsSelected
+          ? teamExpenseService.getAllTeamsSummary()
+          : teamExpenseService.getSummary(teamId),
         Promise.all(
           teamIds.map((currentTeamId) => teamExpenseService.getTransactions(currentTeamId))
         )
       ]);
 
-      setSummaries(summaryResponses.map((response) => response.data));
+      setSummaries([summaryResponse.data]);
       setTransactions(transactionResponses.flatMap((response) => response.data));
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, "Unable to load team expense details."));

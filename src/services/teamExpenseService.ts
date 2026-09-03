@@ -8,6 +8,14 @@ import type {
 } from "../types/teamExpense";
 
 export const teamExpenseService = {
+  getAllTeamsSummary: async (): Promise<ApiSuccessResponse<TeamExpenseSummary>> => {
+    const response = await api.get<ApiSuccessResponse<TeamExpenseSummary>>(
+      API_ENDPOINTS.TEAM_EXPENSES.SUMMARY_ALL
+    );
+
+    return response.data;
+  },
+
   getSummary: async (teamId: number): Promise<ApiSuccessResponse<TeamExpenseSummary>> => {
     const response = await api.get<ApiSuccessResponse<TeamExpenseSummary>>(
       API_ENDPOINTS.TEAM_EXPENSES.SUMMARY(teamId)

@@ -1,10 +1,10 @@
 {
-  "name": "sportledger",
+  "name": "sportsledger",
   "version": "0.1.0",
   "private": true,
-  "description": "SportLedger desktop frontend built with React, Vite, TypeScript, Electron, and Ant Design.",
+  "description": "SportsLedger desktop frontend built with React, Vite, TypeScript, Electron, and Ant Design.",
   "main": "dist-electron/main.js",
-  "author": "SportLedger",
+  "author": "SportsLedger",
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
@@ -34,11 +34,13 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.sportledger.desktop",
-    "productName": "SportLedger",
+    "appId": "in.sportsledger.desktop",
+    "productName": "SportsLedger",
+    "icon": "build/icon.png",
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      "build/icon.png"
     ],
     "directories": {
       "buildResources": "build",

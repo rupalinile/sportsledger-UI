@@ -1,5 +1,5 @@
 export const ELECTRON_WINDOW = {
-  TITLE: "SportLedger",
+  TITLE: "SportsLedger",
   WIDTH: 1280,
   HEIGHT: 800,
   MIN_WIDTH: 1024,

@@ -5,6 +5,7 @@ import { ELECTRON_COLORS, ELECTRON_WINDOW } from "./constants.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const appIconPath = path.join(__dirname, "../build/icon.png");
 
 const createMainWindow = (): void => {
   const mainWindow = new BrowserWindow({
@@ -13,6 +14,7 @@ const createMainWindow = (): void => {
     minWidth: ELECTRON_WINDOW.MIN_WIDTH,
     minHeight: ELECTRON_WINDOW.MIN_HEIGHT,
     title: ELECTRON_WINDOW.TITLE,
+    icon: appIconPath,
     backgroundColor: ELECTRON_COLORS.BACKGROUND,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),

@@ -7,7 +7,7 @@ import {
   WalletOutlined
 } from "@ant-design/icons";
 import { Layout, Menu, Typography } from "antd";
-import sportLedgerLogo from "../../assets/sportledger-logo.png";
+import sportsLedgerLogo from "../../assets/sportsledger-logo.png";
 import { APP_CONFIG } from "../../constants/app.constants";
 import { COLORS } from "../../constants/colors";
 import { ROUTES } from "../../constants/routes";
@@ -45,7 +45,7 @@ export const AppSidebar = ({ currentRoute, isFreePlan, onNavigate }: AppSidebarP
     <Sider width={APP_CONFIG.SIDEBAR_WIDTH} className="app-sidebar">
       <div className="app-sidebar__brand" style={{ height: APP_CONFIG.HEADER_HEIGHT }}>
         <span className="app-sidebar__logo">
-          <img src={sportLedgerLogo} alt="" />
+          <img src={sportsLedgerLogo} alt="" />
         </span>
         <Title level={4} style={{ color: COLORS.WHITE }}>
           {APP_CONFIG.APP_NAME}

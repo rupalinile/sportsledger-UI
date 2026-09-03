@@ -1,7 +1,7 @@
 import { CalendarOutlined, TeamOutlined, WalletOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import type { PropsWithChildren, ReactNode } from "react";
-import sportLedgerLogo from "../assets/sportledger-logo.png";
+import sportsLedgerLogo from "../assets/sportsledger-logo.png";
 import { APP_CONFIG } from "../constants/app.constants";
 
 const { Title, Text } = Typography;
@@ -23,7 +23,7 @@ export const AuthLayout = ({
   <main className="auth-layout">
     <section className="auth-layout__brand">
       <div className="auth-layout__logo">
-        <img src={sportLedgerLogo} alt={`${APP_CONFIG.APP_NAME} logo`} />
+        <img src={sportsLedgerLogo} alt={`${APP_CONFIG.APP_NAME} logo`} />
       </div>
       <Title className="auth-layout__app-name">{APP_CONFIG.APP_NAME}</Title>
       <Text className="auth-layout__tagline">{APP_CONFIG.APP_TAGLINE}</Text>

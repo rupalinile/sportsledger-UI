@@ -1,16 +1,16 @@
 export const APP_CONFIG = {
-  APP_NAME: "SportLedger",
+  APP_NAME: "SportsLedger",
   APP_TAGLINE: "Play Together. Track Every Expense.",
   SIDEBAR_WIDTH: 288,
   HEADER_HEIGHT: 64
 } as const;
 
 export const LOCAL_STORAGE_KEYS = {
-  THEME_MODE: "cricktrack.themeMode",
-  ACCESS_TOKEN: "cricktrack.accessToken",
-  REFRESH_TOKEN: "cricktrack.refreshToken",
-  AUTH_USER: "cricktrack.authUser",
-  SUBSCRIPTION: "cricktrack.subscription"
+  THEME_MODE: "sportsledger.themeMode",
+  ACCESS_TOKEN: "sportsledger.accessToken",
+  REFRESH_TOKEN: "sportsledger.refreshToken",
+  AUTH_USER: "sportsledger.authUser",
+  SUBSCRIPTION: "sportsledger.subscription"
 } as const;
 
 export const STATUS = {

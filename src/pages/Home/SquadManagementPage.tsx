@@ -339,7 +339,7 @@ export const SquadManagementPage = (): JSX.Element => {
           locale={{
             emptyText: <Empty description="No players found" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           }}
-          pagination={{ pageSize: 10, showSizeChanger: false }}
+          pagination={false}
           rowKey="id"
         />
       </div>

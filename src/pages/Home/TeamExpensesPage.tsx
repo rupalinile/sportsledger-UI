@@ -190,6 +190,21 @@ export const TeamExpensesPage = (): JSX.Element => {
   const summaryTeamBalance = summaryBalanceValues.reduce((total, value) => total + value, 0);
   const totalTeamBalance =
     summaryBalanceValues.length > 0 ? summaryTeamBalance : totalDeposited + otherAmount;
+  const totalScheduledMatchesAmount = summaries.reduce(
+    (total, currentSummary) =>
+      total + (getSummaryValue(currentSummary, ["total_scheduled_matches_amount"]) ?? 0),
+    0
+  );
+  const scheduledPaidMatchesAmount = summaries.reduce(
+    (total, currentSummary) =>
+      total + (getSummaryValue(currentSummary, ["scheduled_paid_matches_amount"]) ?? 0),
+    0
+  );
+  const scheduledPendingMatchesAmount = summaries.reduce(
+    (total, currentSummary) =>
+      total + (getSummaryValue(currentSummary, ["scheduled_pending_matches_amount"]) ?? 0),
+    0
+  );
 
   const selectedTeamLabel =
     selectedTeamId === ALL_TEAMS_VALUE
@@ -427,6 +442,21 @@ export const TeamExpensesPage = (): JSX.Element => {
           </strong>
           <Text type="secondary">Deposits + Other Amount</Text>
         </div>
+        <div className="team-expenses-page__stat">
+          <Text type="secondary">Scheduled Match Amount</Text>
+          <strong>{formatCurrency(totalScheduledMatchesAmount)}</strong>
+          <Text type="secondary">{selectedTeamLabel} scheduled matches</Text>
+        </div>
+        <div className="team-expenses-page__stat team-expenses-page__stat--paid">
+          <Text type="secondary">Paid Scheduled Amount</Text>
+          <strong>{formatCurrency(scheduledPaidMatchesAmount)}</strong>
+          <Text type="secondary">Only PAID scheduled matches</Text>
+        </div>
+        <div className="team-expenses-page__stat">
+          <Text type="secondary">Pending Scheduled Amount</Text>
+          <strong>{formatCurrency(scheduledPendingMatchesAmount)}</strong>
+          <Text type="secondary">Scheduled matches still pending</Text>
+        </div>
       </div>
 
       <div className="management-page__panel team-expenses-page__panel">
@@ -450,7 +480,7 @@ export const TeamExpensesPage = (): JSX.Element => {
               <Empty description="No transactions found" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )
           }}
-          pagination={{ pageSize: 10, showSizeChanger: false }}
+          pagination={{ pageSize: 20, showSizeChanger: false }}
           rowKey="id"
         />
       </div>

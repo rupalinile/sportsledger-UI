@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarOutlined,
   CheckCircleOutlined,
@@ -11,7 +11,9 @@ import {
 import {
   Alert,
   Button,
+  Checkbox,
   DatePicker,
+  Divider,
   Dropdown,
   Empty,
   Form,
@@ -77,12 +79,40 @@ type CompleteMatchFormValues = {
   guestShareCount?: number;
 };
 
+type ReleaseSlotsFormValues = {
+  groundName: string;
+  month: Dayjs;
+  days: number[];
+  startTime: Dayjs;
+  endTime: Dayjs;
+  myTeamId: number;
+};
+
+type ReleasedSlotsSummary = {
+  groundName: string;
+  month: Dayjs;
+  days: number[];
+  startTime: Dayjs;
+  endTime: Dayjs;
+  myTeamId: number;
+};
+
 type PlannerDateItem = {
   date: Dayjs | null;
   matches: Match[];
 };
 
 const plannerWeekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const releaseDayOptions = [
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+  { label: "Sat", value: 6 },
+  { label: "Sun", value: 0 }
+];
 
 const slotStatusOptions = [
   { label: "Ground Booked", value: "GROUND_BOOKED" },
@@ -240,8 +270,14 @@ export const MatchesManagementPage = (): JSX.Element => {
   const [plannerModalDate, setPlannerModalDate] = useState<Dayjs | null>(null);
   const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [isReleaseSlotsModalOpen, setIsReleaseSlotsModalOpen] = useState(false);
+  const [releasedSlotsSummary, setReleasedSlotsSummary] = useState<ReleasedSlotsSummary | null>(
+    null
+  );
   const [matchForm] = Form.useForm<MatchFormValues>();
   const [completeForm] = Form.useForm<CompleteMatchFormValues>();
+  const [releaseSlotsForm] = Form.useForm<ReleaseSlotsFormValues>();
+  const releaseSummaryTitleRef = useRef<HTMLElement | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
 
   const loadPageData = useCallback(async (): Promise<void> => {
@@ -269,6 +305,12 @@ export const MatchesManagementPage = (): JSX.Element => {
     void loadPageData();
   }, [loadPageData]);
 
+  useEffect(() => {
+    if (releasedSlotsSummary) {
+      releaseSummaryTitleRef.current?.focus();
+    }
+  }, [releasedSlotsSummary]);
+
   const teamOptions = useMemo(
     () => teams.map((team) => ({ label: team.teamName, value: team.id })),
     [teams]
@@ -281,6 +323,11 @@ export const MatchesManagementPage = (): JSX.Element => {
     ],
     [teams]
   );
+
+  const allMatches = useMemo(() => [...scheduledMatches, ...settledMatches], [
+    scheduledMatches,
+    settledMatches
+  ]);
 
   const filteredScheduledMatches = useMemo(() => {
     return scheduledMatches.filter((match) => {
@@ -313,9 +360,7 @@ export const MatchesManagementPage = (): JSX.Element => {
   const plannerMonth = selectedMonth ?? dayjs();
 
   const plannerMatches = useMemo(() => {
-    const matchesForPlanner = [...scheduledMatches, ...settledMatches];
-
-    return matchesForPlanner.filter((match) => {
+    return allMatches.filter((match) => {
       const matchesTeam =
         selectedTeamId === ALL_MATCHES_VALUE || match.my_team_id === selectedTeamId;
       const matchesPaymentStatus = doesMatchPaymentStatusFilter(
@@ -326,7 +371,7 @@ export const MatchesManagementPage = (): JSX.Element => {
 
       return matchesTeam && matchesPaymentStatus && matchesMonth;
     });
-  }, [plannerMonth, scheduledMatches, selectedPaymentStatus, selectedTeamId, settledMatches]);
+  }, [allMatches, plannerMonth, selectedPaymentStatus, selectedTeamId]);
 
   const plannerDateItems = useMemo<PlannerDateItem[]>(() => {
     const daysInMonth = plannerMonth.daysInMonth();
@@ -352,6 +397,31 @@ export const MatchesManagementPage = (): JSX.Element => {
 
     return plannerMatches.filter((match) => dayjs(match.match_date).isSame(plannerModalDate, "day"));
   }, [plannerMatches, plannerModalDate]);
+
+  const releasedSlotItems = useMemo(() => {
+    if (!releasedSlotsSummary) {
+      return [];
+    }
+
+    const daysInMonth = releasedSlotsSummary.month.daysInMonth();
+
+    return Array.from({ length: daysInMonth }, (_, index) =>
+      releasedSlotsSummary.month.date(index + 1)
+    )
+      .filter((date) => releasedSlotsSummary.days.includes(date.day()))
+      .map((date) => {
+        const isBooked = allMatches.some(
+          (match) =>
+            match.my_team_id === releasedSlotsSummary.myTeamId &&
+            dayjs(match.match_date).isSame(date, "day")
+        );
+
+        return {
+          date,
+          status: isBooked ? "Booked" : "Available"
+        };
+      });
+  }, [allMatches, releasedSlotsSummary]);
 
   const playerOptions = useMemo(() => {
     const teamPlayers = players.filter((player) => player.team_id !== ALL_SELECTION_TEAM_ID);
@@ -577,6 +647,43 @@ export const MatchesManagementPage = (): JSX.Element => {
     setCompletingMatch(null);
     setPlayers([]);
     completeForm.resetFields();
+  };
+
+  const openReleaseSlotsModal = (): void => {
+    const defaultTeamId = teams.length === 1 ? teams[0].id : teamOptions[0]?.value;
+
+    releaseSlotsForm.setFieldsValue({
+      groundName: "",
+      month: selectedMonth ?? dayjs(),
+      days: [6, 0],
+      startTime: dayjs("07:00:00", "HH:mm:ss"),
+      endTime: dayjs("10:00:00", "HH:mm:ss"),
+      myTeamId: defaultTeamId
+    });
+    setReleasedSlotsSummary(null);
+    setIsReleaseSlotsModalOpen(true);
+  };
+
+  const closeReleaseSlotsModal = (): void => {
+    setIsReleaseSlotsModalOpen(false);
+    setReleasedSlotsSummary(null);
+    releaseSlotsForm.resetFields();
+  };
+
+  const handleReleaseSlots = (values: ReleaseSlotsFormValues): void => {
+    if (values.endTime.isBefore(values.startTime) || values.endTime.isSame(values.startTime)) {
+      messageApi.error("End time must be after start time.");
+      return;
+    }
+
+    setReleasedSlotsSummary({
+      groundName: values.groundName.trim(),
+      month: values.month,
+      days: values.days,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      myTeamId: values.myTeamId
+    });
   };
 
   const handleCompleteMatch = async (values: CompleteMatchFormValues): Promise<void> => {
@@ -829,6 +936,13 @@ export const MatchesManagementPage = (): JSX.Element => {
           <Button icon={<ReloadOutlined />} loading={isLoading} onClick={() => void loadPageData()}>
             Refresh
           </Button>
+          <Button
+            className="matches-page__release-button"
+            icon={<CalendarOutlined />}
+            onClick={openReleaseSlotsModal}
+          >
+            Release slots for opponent checking
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openScheduleMatchModal()}>
             Schedule New Match
           </Button>
@@ -927,7 +1041,7 @@ export const MatchesManagementPage = (): JSX.Element => {
                       />
                     )
                   }}
-                  pagination={{ pageSize: 10, showSizeChanger: false }}
+                  pagination={{ pageSize: 20, showSizeChanger: false }}
                   rowKey="id"
                   scroll={{ x: "max-content" }}
                 />
@@ -954,7 +1068,7 @@ export const MatchesManagementPage = (): JSX.Element => {
                       />
                     )
                   }}
-                  pagination={{ pageSize: 10, showSizeChanger: false }}
+                  pagination={{ pageSize: 20, showSizeChanger: false }}
                   rowKey="id"
                   scroll={{ x: "max-content" }}
                 />
@@ -1012,6 +1126,125 @@ export const MatchesManagementPage = (): JSX.Element => {
             </div>
           ))}
         </div>
+      </Modal>
+
+      <Modal
+        footer={null}
+        open={isReleaseSlotsModalOpen}
+        title="Release slots for opponent checking"
+        width={1040}
+        onCancel={closeReleaseSlotsModal}
+      >
+        <Form<ReleaseSlotsFormValues>
+          className="matches-page__release-form"
+          form={releaseSlotsForm}
+          layout="vertical"
+          requiredMark={false}
+          onFinish={handleReleaseSlots}
+        >
+          <div className="matches-page__release-form-grid">
+            <Form.Item
+              label="Ground Name"
+              name="groundName"
+              rules={[
+                { required: true, whitespace: true, message: "Please enter ground name" },
+                { max: 140, message: "Ground name must be 140 characters or fewer" }
+              ]}
+            >
+              <Input placeholder="Enter ground name" />
+            </Form.Item>
+            <Form.Item
+              label="Select Month"
+              name="month"
+              rules={[{ required: true, message: "Please select month" }]}
+            >
+              <DatePicker
+                className="matches-page__full-control"
+                format="MMMM YYYY"
+                picker="month"
+              />
+            </Form.Item>
+            <Form.Item
+              label="Start Time"
+              name="startTime"
+              rules={[{ required: true, message: "Please select start time" }]}
+            >
+              <TimePicker className="matches-page__full-control" format="HH:mm" minuteStep={5} />
+            </Form.Item>
+            <Form.Item
+              label="End Time"
+              name="endTime"
+              rules={[{ required: true, message: "Please select end time" }]}
+            >
+              <TimePicker className="matches-page__full-control" format="HH:mm" minuteStep={5} />
+            </Form.Item>
+            <Form.Item
+              label="Select My Team"
+              name="myTeamId"
+              rules={[{ required: true, message: "Please select your team" }]}
+            >
+              <Select
+                disabled={teams.length === 1}
+                optionFilterProp="label"
+                options={teamOptions}
+                placeholder="Select team"
+                showSearch
+              />
+            </Form.Item>
+            <Form.Item
+              className="matches-page__release-days"
+              label="Allow Select Days"
+              name="days"
+              rules={[{ required: true, message: "Please select at least one day" }]}
+            >
+              <Checkbox.Group options={releaseDayOptions} />
+            </Form.Item>
+          </div>
+          <div className="matches-page__release-actions">
+            <Button type="primary" htmlType="submit">
+              Release slots
+            </Button>
+          </div>
+        </Form>
+
+        {releasedSlotsSummary ? (
+          <>
+            <Divider />
+            <div className="matches-page__release-summary">
+              <strong ref={releaseSummaryTitleRef} tabIndex={0}>
+                Looking For opponent on below dates
+              </strong>
+              <div className="matches-page__release-summary-meta">
+                <Text tabIndex={0} strong>
+                  {releasedSlotsSummary.month.format("MMMM YYYY")}
+                </Text>
+                <Text tabIndex={0} strong>
+                  Slot Timing {releasedSlotsSummary.startTime.format("hh:mm A")} -{" "}
+                  {releasedSlotsSummary.endTime.format("hh:mm A")}
+                </Text>
+                <Text tabIndex={0} strong>
+                  Ground {releasedSlotsSummary.groundName}
+                </Text>
+              </div>
+            </div>
+            <div className="matches-page__release-slots-grid">
+              {releasedSlotItems.map((item) => (
+                <div
+                  className={`matches-page__release-slot-card ${
+                    item.status === "Booked"
+                      ? "matches-page__release-slot-card--booked"
+                      : "matches-page__release-slot-card--available"
+                  }`}
+                  key={item.date.format("YYYY-MM-DD")}
+                >
+                  <span>{item.date.format("ddd")}</span>
+                  <strong>{item.date.format("DD MMM")}</strong>
+                  <em>{item.status}</em>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
       </Modal>
 
       <Modal

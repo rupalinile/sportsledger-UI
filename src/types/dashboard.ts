@@ -19,12 +19,18 @@ export interface TeamWiseSummary {
   total_team_balance: number;
   total_squad_count: number;
   total_matches_scheduled: number;
+  total_scheduled_matches_amount: number;
+  scheduled_paid_matches_amount: number;
+  scheduled_pending_matches_amount: number;
 }
 
 export interface OverallSummary {
   total_team_balance: number;
   total_squad_count: number;
   total_matches_scheduled: number;
+  total_scheduled_matches_amount: number;
+  scheduled_paid_matches_amount: number;
+  scheduled_pending_matches_amount: number;
 }
 
 export interface DashboardSummary {

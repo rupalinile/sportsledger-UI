@@ -156,7 +156,7 @@ body {
 
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
   margin-bottom: 36px;
 }
@@ -165,6 +165,7 @@ body {
 .dashboard-team-list,
 .dashboard-empty-panel,
 .team-summary-card,
+.dashboard-paid-summary__panel,
 .quick-access__item,
 .management-page__panel {
   background: #ffffff;
@@ -310,7 +311,7 @@ body {
 
 .team-summary-card__metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -329,6 +330,85 @@ body {
 
 .dashboard-empty-panel {
   padding: 26px;
+}
+
+.dashboard-paid-summary {
+  margin-bottom: 36px;
+}
+
+.dashboard-paid-summary .page-header {
+  margin-bottom: 18px;
+}
+
+.dashboard-paid-summary__panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.7fr) minmax(0, 1.3fr);
+  gap: 24px;
+  padding: 26px;
+}
+
+.dashboard-paid-summary__hero {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  padding-right: 24px;
+  border-right: 1px solid #e3e8ef;
+}
+
+.dashboard-paid-summary__icon {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  color: #ffffff;
+  font-size: 24px;
+  border-radius: 8px;
+  background: #009a44;
+}
+
+.dashboard-paid-summary__hero h2.ant-typography {
+  margin: 8px 0;
+  color: #0f1d31;
+  font-size: 34px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-paid-summary__list {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-paid-summary__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(116px, 0.7fr) minmax(150px, 0.9fr);
+  gap: 14px;
+  align-items: center;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid #edf0f5;
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.dashboard-paid-summary__item--overall {
+  border-color: #cfeedd;
+  background: #f7fff9;
+}
+
+.dashboard-paid-summary__item > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.dashboard-paid-summary__item strong {
+  color: #0f1d31;
+  font-size: 17px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .quick-access .page-header {
@@ -505,6 +585,10 @@ body {
   border-color: #f63f67;
 }
 
+.team-expenses-page__stat--paid {
+  border-color: #cfeedd;
+}
+
 .player-expense-page__stat .ant-typography,
 .team-expenses-page__stat .ant-typography {
   font-size: 16px;
@@ -615,6 +699,59 @@ body {
 
 .player-expense-page__full-control {
   width: 100%;
+}
+
+.player-expense-page__report-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.player-expense-page__report-month {
+  width: 240px;
+}
+
+.player-expense-page__report-modal .ant-table {
+  color: #0f1d31;
+}
+
+.player-expense-page__report-modal .ant-table-thead > tr > th {
+  color: #0f1d31;
+  font-size: 15px;
+  font-weight: 700;
+  background: #edf6ff;
+}
+
+.player-expense-page__report-modal .ant-table-tbody > tr > td {
+  font-size: 15px;
+}
+
+.player-expense-page__report-modal .ant-table-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.player-expense-page__report-modal .ant-table-row-expand-icon-cell {
+  width: 54px;
+}
+
+.player-expense-page__report-row {
+  cursor: pointer;
+}
+
+.player-expense-page__report-row:hover > td,
+.player-expense-page__report-row:focus > td {
+  background: #f7fbff;
+}
+
+.player-expense-page__report-row:focus {
+  outline: 3px solid rgba(22, 119, 255, 0.22);
+  outline-offset: -3px;
+}
+
+.player-expense-page__report-details-table .ant-table-thead > tr > th {
+  font-weight: 700;
+  background: #edf6ff;
 }
 
 .matches-page__panel {
@@ -860,6 +997,150 @@ body {
   width: 100%;
 }
 
+.matches-page__release-button.ant-btn,
+.player-expense-page__report-button.ant-btn {
+  color: #ffffff;
+  font-weight: 600;
+  border: 0;
+  background: linear-gradient(135deg, #1677ff 0%, #f63f67 100%);
+  box-shadow: 0 8px 18px rgba(246, 63, 103, 0.22);
+}
+
+.matches-page__release-button.ant-btn:hover,
+.matches-page__release-button.ant-btn:focus-visible,
+.player-expense-page__report-button.ant-btn:hover,
+.player-expense-page__report-button.ant-btn:focus-visible {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0958d9 0%, #dc3159 100%);
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.16), 0 10px 22px rgba(246, 63, 103, 0.3);
+}
+
+.matches-page__release-form {
+  display: grid;
+  gap: 16px;
+}
+
+.matches-page__release-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.matches-page__release-days {
+  grid-column: span 2;
+}
+
+.matches-page__release-days .ant-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(58px, 1fr));
+  gap: 10px;
+}
+
+.matches-page__release-days .ant-checkbox-wrapper {
+  min-height: 38px;
+  margin: 0;
+  padding: 8px 10px;
+  color: #0f1d31;
+  font-weight: 600;
+  border: 1px solid #e3e8ef;
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.matches-page__release-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.matches-page__release-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.matches-page__release-summary > strong {
+  color: #0f1d31;
+  font-size: 20px;
+  line-height: 1.25;
+  outline-offset: 4px;
+}
+
+.matches-page__release-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.matches-page__release-summary-meta .ant-typography {
+  margin: 0;
+  padding: 6px 10px;
+  color: #0f1d31;
+  font-weight: 700;
+  border-radius: 8px;
+  background: #f6f8fb;
+  outline-offset: 3px;
+}
+
+.matches-page__release-summary-meta .ant-typography:focus-visible {
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.16);
+}
+
+.matches-page__release-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.matches-page__release-slot-card {
+  display: grid;
+  gap: 4px;
+  min-height: 82px;
+  padding: 10px;
+  color: #0f1d31;
+  border: 1px solid;
+  border-radius: 8px;
+}
+
+.matches-page__release-slot-card span {
+  color: #596579;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.matches-page__release-slot-card strong {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.matches-page__release-slot-card em {
+  justify-self: start;
+  padding: 3px 8px;
+  color: #ffffff;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.matches-page__release-slot-card--available {
+  background: #f2fbf5;
+  border-color: #b9e9c9;
+}
+
+.matches-page__release-slot-card--available em {
+  background: #009a44;
+}
+
+.matches-page__release-slot-card--booked {
+  background: #fff1f5;
+  border-color: #ffc5d2;
+}
+
+.matches-page__release-slot-card--booked em {
+  background: #b01243;
+}
+
 .team-expenses-page__section-title.ant-typography {
   margin: 0;
   color: #0f1d31;
@@ -927,10 +1208,22 @@ body {
 @media (max-width: 1280px) {
   .dashboard-stats,
   .dashboard-team-summary__grid,
+  .dashboard-paid-summary__panel,
   .quick-access__grid,
   .player-expense-page__stats,
   .matches-page__planner-modal-item,
   .team-expenses-page__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-paid-summary__hero {
+    padding-right: 0;
+    padding-bottom: 22px;
+    border-right: 0;
+    border-bottom: 1px solid #e3e8ef;
+  }
+
+  .dashboard-paid-summary__item {
     grid-template-columns: 1fr;
   }
 }

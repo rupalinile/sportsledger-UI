@@ -28,6 +28,16 @@ export interface LoginResponse {
   refreshToken: string;
 }
 
+export interface RefreshTokenPayload {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface RegisterPayload {
   username: string;
   password: string;

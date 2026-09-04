@@ -17,6 +17,10 @@ export const LOCAL_STORAGE_KEYS = {
   SUBSCRIPTION: "sportsledger.subscription"
 } as const;
 
+export const AUTH_EVENTS = {
+  SESSION_EXPIRED: "sportsledger:session-expired"
+} as const;
+
 export const STATUS = {
   IDLE: "idle",
   LOADING: "loading",

@@ -1,7 +1,8 @@
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/login",
-    REGISTER: "/auth/register"
+    REGISTER: "/auth/register",
+    REFRESH_TOKEN: "/auth/refresh-token"
   },
   TEAMS: {
     BASE: "/teams",

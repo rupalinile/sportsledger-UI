@@ -8,7 +8,7 @@ import { MatchesManagementPage } from "./pages/Home/MatchesManagementPage";
 import { PlayerExpenseManagementPage } from "./pages/Home/PlayerExpenseManagementPage";
 import { SquadManagementPage } from "./pages/Home/SquadManagementPage";
 import { TeamExpensesPage } from "./pages/Home/TeamExpensesPage";
-import { LOCAL_STORAGE_KEYS } from "./constants/app.constants";
+import { AUTH_EVENTS, LOCAL_STORAGE_KEYS } from "./constants/app.constants";
 import { ROUTES } from "./constants/routes";
 import { useAppUpdate } from "./contexts/AppUpdateContext";
 import type { AuthSubscription } from "./types/auth";
@@ -30,10 +30,14 @@ const clearStoredAuth = (): void => {
 };
 
 const getStartupRoute = (): AppRoute => {
-  clearStoredAuth();
-  window.history.replaceState(null, "", ROUTES.LOGIN);
+  const refreshToken = localStorage.getItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN);
+  const currentRoute = getCurrentRoute();
+  const isAuthRoute = currentRoute === ROUTES.LOGIN || currentRoute === ROUTES.REGISTER;
+  const startupRoute = !refreshToken ? ROUTES.LOGIN : isAuthRoute ? ROUTES.HOME : currentRoute;
 
-  return ROUTES.LOGIN;
+  window.history.replaceState(null, "", startupRoute);
+
+  return startupRoute;
 };
 
 const getAllowedRoute = (
@@ -62,8 +66,23 @@ const getAllowedRoute = (
 const App = (): JSX.Element => {
   const { isUpdatePageRequired, isUpdateBlocking } = useAppUpdate();
   const [currentRoute, setCurrentRoute] = useState<AppRoute>(getStartupRoute);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [subscription, setSubscription] = useState<AuthSubscription | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    Boolean(localStorage.getItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN))
+  );
+  const [subscription, setSubscription] = useState<AuthSubscription | null>(getStoredSubscription);
+
+  useEffect(() => {
+    const handleSessionExpired = (): void => {
+      setSubscription(null);
+      setIsAuthenticated(false);
+      window.history.replaceState(null, "", ROUTES.LOGIN);
+      setCurrentRoute(ROUTES.LOGIN);
+    };
+
+    window.addEventListener(AUTH_EVENTS.SESSION_EXPIRED, handleSessionExpired);
+
+    return () => window.removeEventListener(AUTH_EVENTS.SESSION_EXPIRED, handleSessionExpired);
+  }, []);
 
   useEffect(() => {
     const handlePopState = (): void => {

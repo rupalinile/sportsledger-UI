@@ -81,7 +81,7 @@ type CompleteMatchFormValues = {
 
 type ReleaseSlotsFormValues = {
   groundName: string;
-  month: Dayjs;
+  months: Dayjs[];
   days: number[];
   startTime: Dayjs;
   endTime: Dayjs;
@@ -90,7 +90,7 @@ type ReleaseSlotsFormValues = {
 
 type ReleasedSlotsSummary = {
   groundName: string;
-  month: Dayjs;
+  months: Dayjs[];
   days: number[];
   startTime: Dayjs;
   endTime: Dayjs;
@@ -120,8 +120,9 @@ const slotStatusOptions = [
 ];
 
 const paymentStatusOptions = [
+  { label: "Received", value: "RECEIVED" },
+  { label: "Paid", value: "PAID" },
   { label: "Pending", value: "PENDING" },
-  { label: "Paid", value: "PAID" }
 ];
 
 const paymentStatusFilterOptions = [
@@ -149,7 +150,7 @@ const formatCurrency = (value: number | null | undefined): string =>
 
 const formatDate = (date: string): string => dayjs(date).format("DD MMM YYYY");
 
-const formatTime = (time: string): string => dayjs(time, "HH:mm:ss").format("HH:mm");
+const formatTime = (time: string): string => dayjs(time, "HH:mm:ss").format("hh:mm A");
 
 const formatPlannerStatus = (status: Match["match_status"]): string => {
   if (status === "COMPLETED") {
@@ -174,19 +175,12 @@ const getPaymentStatusColor = (status: MatchPaymentStatus): string => {
   return "warning";
 };
 
-const getEditablePaymentStatus = (status: MatchPaymentStatus): MatchPaymentPayloadStatus =>
-  status === "RECEIVED" ? "PAID" : status;
-
 const doesMatchPaymentStatusFilter = (
   matchPaymentStatus: MatchPaymentStatus,
   selectedPaymentStatus: PaymentStatusFilter
 ): boolean => {
   if (selectedPaymentStatus === ALL_PAYMENT_STATUSES_VALUE) {
     return true;
-  }
-
-  if (selectedPaymentStatus === "PAID") {
-    return matchPaymentStatus === "PAID" || matchPaymentStatus === "RECEIVED";
   }
 
   return matchPaymentStatus === selectedPaymentStatus;
@@ -199,6 +193,39 @@ const doesMatchMonthFilter = (matchDate: string, selectedMonth: Dayjs | null): b
 
   return dayjs(matchDate).isSame(selectedMonth, "month");
 };
+
+const normalizeFilterText = (value: string): string => value.trim().toLowerCase();
+
+const doesTextFilterMatch = (value: string, selectedValue: string | null): boolean => {
+  if (!selectedValue) {
+    return true;
+  }
+
+  return normalizeFilterText(value) === normalizeFilterText(selectedValue);
+};
+
+const getUniqueTextOptions = (values: string[]): { label: string; value: string }[] => {
+  const optionsByKey = new Map<string, string>();
+
+  values.forEach((value) => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return;
+    }
+
+    optionsByKey.set(normalizeFilterText(trimmedValue), trimmedValue);
+  });
+
+  return Array.from(optionsByKey.values())
+    .sort((firstValue, secondValue) => firstValue.localeCompare(secondValue))
+    .map((value) => ({ label: value, value }));
+};
+
+const filterSelectOption = (input: string, option?: { label?: string }): boolean =>
+  String(option?.label ?? "")
+    .toLowerCase()
+    .includes(input.toLowerCase());
 
 const getStatusColor = (status: string): string => {
   if (status === "COMPLETED") {
@@ -260,6 +287,8 @@ export const MatchesManagementPage = (): JSX.Element => {
     ALL_PAYMENT_STATUSES_VALUE
   );
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null);
+  const [selectedGroundName, setSelectedGroundName] = useState<string | null>(null);
+  const [selectedOpponentName, setSelectedOpponentName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingMatch, setIsSavingMatch] = useState(false);
   const [isCompletingMatch, setIsCompletingMatch] = useState(false);
@@ -329,6 +358,16 @@ export const MatchesManagementPage = (): JSX.Element => {
     settledMatches
   ]);
 
+  const groundFilterOptions = useMemo(
+    () => getUniqueTextOptions(allMatches.map((match) => match.ground_name)),
+    [allMatches]
+  );
+
+  const opponentFilterOptions = useMemo(
+    () => getUniqueTextOptions(allMatches.map((match) => match.opponent_team_name)),
+    [allMatches]
+  );
+
   const filteredScheduledMatches = useMemo(() => {
     return scheduledMatches.filter((match) => {
       const matchesTeam =
@@ -338,10 +377,19 @@ export const MatchesManagementPage = (): JSX.Element => {
         selectedPaymentStatus
       );
       const matchesMonth = doesMatchMonthFilter(match.match_date, selectedMonth);
+      const matchesGround = doesTextFilterMatch(match.ground_name, selectedGroundName);
+      const matchesOpponent = doesTextFilterMatch(match.opponent_team_name, selectedOpponentName);
 
-      return matchesTeam && matchesPaymentStatus && matchesMonth;
+      return matchesTeam && matchesPaymentStatus && matchesMonth && matchesGround && matchesOpponent;
     });
-  }, [scheduledMatches, selectedMonth, selectedPaymentStatus, selectedTeamId]);
+  }, [
+    scheduledMatches,
+    selectedGroundName,
+    selectedMonth,
+    selectedOpponentName,
+    selectedPaymentStatus,
+    selectedTeamId
+  ]);
 
   const filteredSettledMatches = useMemo(() => {
     return settledMatches.filter((match) => {
@@ -352,10 +400,19 @@ export const MatchesManagementPage = (): JSX.Element => {
         selectedPaymentStatus
       );
       const matchesMonth = doesMatchMonthFilter(match.match_date, selectedMonth);
+      const matchesGround = doesTextFilterMatch(match.ground_name, selectedGroundName);
+      const matchesOpponent = doesTextFilterMatch(match.opponent_team_name, selectedOpponentName);
 
-      return matchesTeam && matchesPaymentStatus && matchesMonth;
+      return matchesTeam && matchesPaymentStatus && matchesMonth && matchesGround && matchesOpponent;
     });
-  }, [selectedMonth, selectedPaymentStatus, selectedTeamId, settledMatches]);
+  }, [
+    selectedGroundName,
+    selectedMonth,
+    selectedOpponentName,
+    selectedPaymentStatus,
+    selectedTeamId,
+    settledMatches
+  ]);
 
   const plannerMonth = selectedMonth ?? dayjs();
 
@@ -368,10 +425,19 @@ export const MatchesManagementPage = (): JSX.Element => {
         selectedPaymentStatus
       );
       const matchesMonth = dayjs(match.match_date).isSame(plannerMonth, "month");
+      const matchesGround = doesTextFilterMatch(match.ground_name, selectedGroundName);
+      const matchesOpponent = doesTextFilterMatch(match.opponent_team_name, selectedOpponentName);
 
-      return matchesTeam && matchesPaymentStatus && matchesMonth;
+      return matchesTeam && matchesPaymentStatus && matchesMonth && matchesGround && matchesOpponent;
     });
-  }, [allMatches, plannerMonth, selectedPaymentStatus, selectedTeamId]);
+  }, [
+    allMatches,
+    plannerMonth,
+    selectedGroundName,
+    selectedOpponentName,
+    selectedPaymentStatus,
+    selectedTeamId
+  ]);
 
   const plannerDateItems = useMemo<PlannerDateItem[]>(() => {
     const daysInMonth = plannerMonth.daysInMonth();
@@ -398,29 +464,30 @@ export const MatchesManagementPage = (): JSX.Element => {
     return plannerMatches.filter((match) => dayjs(match.match_date).isSame(plannerModalDate, "day"));
   }, [plannerMatches, plannerModalDate]);
 
-  const releasedSlotItems = useMemo(() => {
+  const releasedSlotGroups = useMemo(() => {
     if (!releasedSlotsSummary) {
       return [];
     }
 
-    const daysInMonth = releasedSlotsSummary.month.daysInMonth();
+    return releasedSlotsSummary.months.map((month) => {
+      const daysInMonth = month.daysInMonth();
+      const slots = Array.from({ length: daysInMonth }, (_, index) => month.date(index + 1))
+        .filter((date) => releasedSlotsSummary.days.includes(date.day()))
+        .map((date) => {
+          const isBooked = allMatches.some(
+            (match) =>
+              match.my_team_id === releasedSlotsSummary.myTeamId &&
+              dayjs(match.match_date).isSame(date, "day")
+          );
 
-    return Array.from({ length: daysInMonth }, (_, index) =>
-      releasedSlotsSummary.month.date(index + 1)
-    )
-      .filter((date) => releasedSlotsSummary.days.includes(date.day()))
-      .map((date) => {
-        const isBooked = allMatches.some(
-          (match) =>
-            match.my_team_id === releasedSlotsSummary.myTeamId &&
-            dayjs(match.match_date).isSame(date, "day")
-        );
+          return {
+            date,
+            status: isBooked ? "Booked" : "Available"
+          };
+        });
 
-        return {
-          date,
-          status: isBooked ? "Booked" : "Available"
-        };
-      });
+      return { month, slots };
+    });
   }, [allMatches, releasedSlotsSummary]);
 
   const playerOptions = useMemo(() => {
@@ -549,7 +616,7 @@ export const MatchesManagementPage = (): JSX.Element => {
       opponentCaptainNumber: match.opponent_captain_number,
       slotStatus: match.slot_status,
       matchFees: Number(match.match_fees),
-      paymentStatus: getEditablePaymentStatus(match.payment_status)
+      paymentStatus: match.payment_status
     });
 
     try {
@@ -567,7 +634,7 @@ export const MatchesManagementPage = (): JSX.Element => {
         opponentCaptainNumber: matchDetails.opponent_captain_number,
         slotStatus: matchDetails.slot_status,
         matchFees: Number(matchDetails.match_fees),
-        paymentStatus: getEditablePaymentStatus(matchDetails.payment_status)
+        paymentStatus: matchDetails.payment_status
       });
     } catch (error) {
       messageApi.error(getApiErrorMessage(error, "Unable to load match details."));
@@ -654,7 +721,7 @@ export const MatchesManagementPage = (): JSX.Element => {
 
     releaseSlotsForm.setFieldsValue({
       groundName: "",
-      month: selectedMonth ?? dayjs(),
+      months: [selectedMonth ?? dayjs()],
       days: [6, 0],
       startTime: dayjs("07:00:00", "HH:mm:ss"),
       endTime: dayjs("10:00:00", "HH:mm:ss"),
@@ -678,7 +745,14 @@ export const MatchesManagementPage = (): JSX.Element => {
 
     setReleasedSlotsSummary({
       groundName: values.groundName.trim(),
-      month: values.month,
+      months: Array.from(
+        new Map(
+          values.months
+            .map((month) => month.startOf("month"))
+            .sort((first, second) => first.valueOf() - second.valueOf())
+            .map((month) => [month.format("YYYY-MM"), month])
+        ).values()
+      ),
       days: values.days,
       startTime: values.startTime,
       endTime: values.endTime,
@@ -794,7 +868,7 @@ export const MatchesManagementPage = (): JSX.Element => {
       title: "Time",
       dataIndex: "match_time",
       key: "match_time",
-      width: 100,
+      width: 120,
       render: (time: string) => formatTime(time)
     },
     {
@@ -877,6 +951,13 @@ export const MatchesManagementPage = (): JSX.Element => {
       key: "match_date",
       width: 140,
       render: (date: string) => formatDate(date)
+    },
+    {
+      title: "Time",
+      dataIndex: "match_time",
+      key: "match_time",
+      width: 120,
+      render: (time: string) => formatTime(time)
     },
     {
       title: "Status",
@@ -985,6 +1066,26 @@ export const MatchesManagementPage = (): JSX.Element => {
             options={teamFilterOptions}
             value={selectedTeamId}
             onChange={setSelectedTeamId}
+          />
+          <Select
+            allowClear
+            showSearch
+            className="matches-page__filter"
+            filterOption={filterSelectOption}
+            options={groundFilterOptions}
+            placeholder="All Grounds"
+            value={selectedGroundName}
+            onChange={(value) => setSelectedGroundName(value ?? null)}
+          />
+          <Select
+            allowClear
+            showSearch
+            className="matches-page__filter"
+            filterOption={filterSelectOption}
+            options={opponentFilterOptions}
+            placeholder="All Opponents"
+            value={selectedOpponentName}
+            onChange={(value) => setSelectedOpponentName(value ?? null)}
           />
         </div>
         <Tabs
@@ -1154,13 +1255,14 @@ export const MatchesManagementPage = (): JSX.Element => {
               <Input placeholder="Enter ground name" />
             </Form.Item>
             <Form.Item
-              label="Select Month"
-              name="month"
-              rules={[{ required: true, message: "Please select month" }]}
+              label="Select Months"
+              name="months"
+              rules={[{ required: true, message: "Please select at least one month" }]}
             >
               <DatePicker
                 className="matches-page__full-control"
                 format="MMMM YYYY"
+                multiple
                 picker="month"
               />
             </Form.Item>
@@ -1214,32 +1316,34 @@ export const MatchesManagementPage = (): JSX.Element => {
               <strong ref={releaseSummaryTitleRef} tabIndex={0}>
                 Looking For opponent on below dates
               </strong>
-              <div className="matches-page__release-summary-meta">
-                <Text tabIndex={0} strong>
-                  {releasedSlotsSummary.month.format("MMMM YYYY")}
-                </Text>
-                <Text tabIndex={0} strong>
-                  Slot Timing {releasedSlotsSummary.startTime.format("hh:mm A")} -{" "}
-                  {releasedSlotsSummary.endTime.format("hh:mm A")}
-                </Text>
-                <Text tabIndex={0} strong>
-                  Ground {releasedSlotsSummary.groundName}
-                </Text>
-              </div>
             </div>
-            <div className="matches-page__release-slots-grid">
-              {releasedSlotItems.map((item) => (
-                <div
-                  className={`matches-page__release-slot-card ${
-                    item.status === "Booked"
-                      ? "matches-page__release-slot-card--booked"
-                      : "matches-page__release-slot-card--available"
-                  }`}
-                  key={item.date.format("YYYY-MM-DD")}
-                >
-                  <span>{item.date.format("ddd")}</span>
-                  <strong>{item.date.format("DD MMM")}</strong>
-                  <em>{item.status}</em>
+            <div className="matches-page__release-month-groups">
+              {releasedSlotGroups.map((group) => (
+                <div className="matches-page__release-month-group" key={group.month.format("YYYY-MM")}>
+                  <strong>{group.month.format("MMMM YYYY")}</strong>
+                  <div className="matches-page__release-month-meta">
+                    <Text strong>
+                      Slot Timing {releasedSlotsSummary.startTime.format("hh:mm A")} -{" "}
+                      {releasedSlotsSummary.endTime.format("hh:mm A")}
+                    </Text>
+                    <Text strong>Ground {releasedSlotsSummary.groundName}</Text>
+                  </div>
+                  <div className="matches-page__release-slots-grid">
+                    {group.slots.map((item) => (
+                      <div
+                        className={`matches-page__release-slot-card ${
+                          item.status === "Booked"
+                            ? "matches-page__release-slot-card--booked"
+                            : "matches-page__release-slot-card--available"
+                        }`}
+                        key={item.date.format("YYYY-MM-DD")}
+                      >
+                        <span>{item.date.format("ddd")}</span>
+                        <strong>{item.date.format("DD MMM")}</strong>
+                        <em>{item.status}</em>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

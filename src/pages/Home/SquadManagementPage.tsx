@@ -93,21 +93,24 @@ export const SquadManagementPage = (): JSX.Element => {
 
   const filteredPlayers = useMemo(() => {
     const query = searchText.trim().toLowerCase();
+    const matchingPlayers = query
+      ? players.filter((player) => {
+          const values = [
+            player.player_name,
+            player.mobile_number,
+            player.team_name ?? "",
+            player.team_id === ALL_SELECTION_VALUE ? "all teams" : ""
+          ];
 
-    if (!query) {
-      return players;
-    }
+          return values.some((value) => value.toLowerCase().includes(query));
+        })
+      : players;
 
-    return players.filter((player) => {
-      const values = [
-        player.player_name,
-        player.mobile_number,
-        player.team_name ?? "",
-        player.team_id === ALL_SELECTION_VALUE ? "all teams" : ""
-      ];
-
-      return values.some((value) => value.toLowerCase().includes(query));
-    });
+    return [...matchingPlayers].sort((firstPlayer, secondPlayer) =>
+      firstPlayer.player_name.trim().localeCompare(secondPlayer.player_name.trim(), undefined, {
+        sensitivity: "base"
+      })
+    );
   }, [players, searchText]);
 
   const teamOptions = useMemo(

@@ -3,9 +3,11 @@ import { AppShell } from "./layouts/AppShell";
 import { ApplicationUpdatePage } from "./pages/ApplicationUpdate/ApplicationUpdatePage";
 import { LoginPage } from "./pages/Auth/LoginPage";
 import { RegisterPage } from "./pages/Auth/RegisterPage";
+import { AboutUsPage } from "./pages/Home/AboutUsPage";
 import { HomePage } from "./pages/Home/HomePage";
 import { MatchesManagementPage } from "./pages/Home/MatchesManagementPage";
 import { PlayerExpenseManagementPage } from "./pages/Home/PlayerExpenseManagementPage";
+import { PlayerReportsPage } from "./pages/Home/PlayerReportsPage";
 import { SquadManagementPage } from "./pages/Home/SquadManagementPage";
 import { TeamExpensesPage } from "./pages/Home/TeamExpensesPage";
 import { AUTH_EVENTS, LOCAL_STORAGE_KEYS } from "./constants/app.constants";
@@ -55,6 +57,7 @@ const getAllowedRoute = (
     isFreeSubscription(subscription) &&
     !isAuthRoute &&
     route !== ROUTES.HOME &&
+    route !== ROUTES.ABOUT &&
     route !== ROUTES.APPLICATION_UPDATE
   ) {
     return ROUTES.HOME;
@@ -173,6 +176,14 @@ const App = (): JSX.Element => {
 
     if (currentRoute === ROUTES.TEAM_EXPENSES) {
       return <TeamExpensesPage />;
+    }
+
+    if (currentRoute === ROUTES.PLAYER_REPORTS) {
+      return <PlayerReportsPage />;
+    }
+
+    if (currentRoute === ROUTES.ABOUT) {
+      return <AboutUsPage />;
     }
 
     return <HomePage onNavigate={handleNavigate} />;

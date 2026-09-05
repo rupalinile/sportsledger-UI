@@ -2,6 +2,8 @@ import {
   CalendarOutlined,
   DashboardOutlined,
   DollarCircleOutlined,
+  FileTextOutlined,
+  InfoCircleOutlined,
   SyncOutlined,
   TeamOutlined,
   UserOutlined,
@@ -24,6 +26,8 @@ const routeIcons: Record<AppRoute, JSX.Element> = {
   [ROUTES.SQUAD]: <TeamOutlined />,
   [ROUTES.PLAYER_EXPENSES]: <UserOutlined />,
   [ROUTES.TEAM_EXPENSES]: <DollarCircleOutlined />,
+  [ROUTES.PLAYER_REPORTS]: <FileTextOutlined />,
+  [ROUTES.ABOUT]: <InfoCircleOutlined />,
   [ROUTES.APPLICATION_UPDATE]: <SyncOutlined />,
   [ROUTES.LOGIN]: <WalletOutlined />,
   [ROUTES.REGISTER]: <WalletOutlined />
@@ -38,7 +42,7 @@ interface AppSidebarProps {
 export const AppSidebar = ({ currentRoute, isFreePlan, onNavigate }: AppSidebarProps): JSX.Element => {
   const navigationItems = getNavigationItems().map((item) => ({
     key: item.key,
-    disabled: isFreePlan && item.key !== ROUTES.HOME,
+    disabled: isFreePlan && item.key !== ROUTES.HOME && item.key !== ROUTES.ABOUT,
     icon: routeIcons[item.key],
     label: item.label
   }));
@@ -61,7 +65,7 @@ export const AppSidebar = ({ currentRoute, isFreePlan, onNavigate }: AppSidebarP
         onClick={({ key }) => {
           const route = key as AppRoute;
 
-          if (!isFreePlan || route === ROUTES.HOME) {
+          if (!isFreePlan || route === ROUTES.HOME || route === ROUTES.ABOUT) {
             onNavigate(route);
           }
         }}

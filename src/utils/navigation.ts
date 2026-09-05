@@ -21,6 +21,14 @@ export const getNavigationItems = (): NavigationItem[] => [
   {
     key: ROUTES.TEAM_EXPENSES,
     label: ROUTE_LABELS[ROUTES.TEAM_EXPENSES]
+  },
+  {
+    key: ROUTES.PLAYER_REPORTS,
+    label: ROUTE_LABELS[ROUTES.PLAYER_REPORTS]
+  },
+  {
+    key: ROUTES.ABOUT,
+    label: ROUTE_LABELS[ROUTES.ABOUT]
   }
 ];
 

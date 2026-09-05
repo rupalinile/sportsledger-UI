@@ -997,8 +997,7 @@ body {
   width: 100%;
 }
 
-.matches-page__release-button.ant-btn,
-.player-expense-page__report-button.ant-btn {
+.matches-page__release-button.ant-btn {
   color: #ffffff;
   font-weight: 600;
   border: 0;
@@ -1007,9 +1006,7 @@ body {
 }
 
 .matches-page__release-button.ant-btn:hover,
-.matches-page__release-button.ant-btn:focus-visible,
-.player-expense-page__report-button.ant-btn:hover,
-.player-expense-page__report-button.ant-btn:focus-visible {
+.matches-page__release-button.ant-btn:focus-visible {
   color: #ffffff;
   background: linear-gradient(135deg, #0958d9 0%, #dc3159 100%);
   box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.16), 0 10px 22px rgba(246, 63, 103, 0.3);
@@ -1084,11 +1081,41 @@ body {
   box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.16);
 }
 
+.matches-page__release-month-groups {
+  display: grid;
+  gap: 22px;
+  margin-top: 18px;
+}
+
+.matches-page__release-month-group {
+  display: grid;
+  gap: 10px;
+}
+
+.matches-page__release-month-group > strong {
+  color: #0f1d31;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.matches-page__release-month-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.matches-page__release-month-meta .ant-typography {
+  margin: 0;
+  padding: 5px 10px;
+  color: #0f1d31;
+  border-radius: 8px;
+  background: #f6f8fb;
+}
+
 .matches-page__release-slots-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: 10px;
-  margin-top: 16px;
 }
 
 .matches-page__release-slot-card {
@@ -1205,11 +1232,204 @@ body {
   width: 100%;
 }
 
+.about-page {
+  display: grid;
+  gap: 28px;
+  width: 100%;
+}
+
+.about-page__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.about-page__hero > div,
+.about-page__highlight,
+.about-flow-card {
+  background: #ffffff;
+  border: 1px solid #e3e8ef;
+  border-radius: 8px;
+}
+
+.about-page__hero > div:first-child {
+  padding: 30px;
+}
+
+.about-page__intro.ant-typography {
+  display: block;
+  max-width: 880px;
+  color: #0f1d31;
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.about-page__identity {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: 30px;
+  border-color: #f63f67;
+}
+
+.about-page__identity h3.ant-typography {
+  margin: 0;
+  color: #0f1d31;
+  font-size: 28px;
+  line-height: 1.18;
+}
+
+.about-page__identity .ant-typography {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.about-page__highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.about-page__highlight {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-height: 126px;
+  padding: 22px;
+}
+
+.about-page__highlight-icon,
+.about-flow-card__icon {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  border-radius: 8px;
+  background: #f63f67;
+}
+
+.about-page__highlight:nth-child(2) .about-page__highlight-icon,
+.about-flow-card:nth-child(even) .about-flow-card__icon {
+  background: #1677ff;
+}
+
+.about-page__highlight:nth-child(3) .about-page__highlight-icon,
+.about-flow-card:nth-child(3n) .about-flow-card__icon {
+  background: #009a44;
+}
+
+.about-page__highlight-icon {
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+}
+
+.about-page__highlight > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.about-page__highlight strong {
+  color: #0f1d31;
+  font-size: 19px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.about-page__highlight .ant-typography-secondary {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.about-page__section-heading .page-header {
+  margin-bottom: 0;
+}
+
+.about-page__flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.about-flow-card {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+  min-height: 360px;
+  padding: 24px;
+}
+
+.about-flow-card__heading {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.about-flow-card__icon {
+  width: 46px;
+  height: 46px;
+  font-size: 22px;
+}
+
+.about-flow-card__heading h4.ant-typography {
+  margin: 0 0 8px;
+  color: #0f1d31;
+  font-size: 22px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.about-flow-card__heading .ant-typography-secondary {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.about-flow-card__steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: about-flow-step;
+}
+
+.about-flow-card__steps li {
+  position: relative;
+  min-height: 42px;
+  padding-left: 48px;
+  color: #0f1d31;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.about-flow-card__steps li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #b01243;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: #fff1f5;
+  counter-increment: about-flow-step;
+  content: counter(about-flow-step);
+}
+
 @media (max-width: 1280px) {
   .dashboard-stats,
   .dashboard-team-summary__grid,
   .dashboard-paid-summary__panel,
   .quick-access__grid,
+  .about-page__hero,
+  .about-page__highlights,
+  .about-page__flow-grid,
   .player-expense-page__stats,
   .matches-page__planner-modal-item,
   .team-expenses-page__stats {

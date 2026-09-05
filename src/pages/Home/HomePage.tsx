@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRightOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   EditOutlined,
-  FileTextOutlined,
   PlusOutlined,
   ReloadOutlined,
   TeamOutlined,
@@ -24,12 +23,9 @@ import {
   Select,
   Space,
   Spin,
-  Table,
-  Tag,
   TimePicker,
   Typography,
-  message,
-  type TableProps
+  message
 } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { PageHeader } from "../../components/common/PageHeader";
@@ -43,10 +39,7 @@ import { teamService } from "../../services/teamService";
 import type { DashboardSummary, Team } from "../../types/dashboard";
 import type { Match, SettledMatch } from "../../types/match";
 import type { Player } from "../../types/player";
-import type {
-  PlayerDeposit,
-  PlayerExpenseSummary
-} from "../../types/playerExpense";
+import type { PlayerExpenseSummary } from "../../types/playerExpense";
 import type { AppRouteProps } from "../../types/navigation";
 import { getApiErrorMessage } from "../../utils/apiError";
 
@@ -59,7 +52,7 @@ type TeamFormValues = {
 
 type ReleaseSlotsFormValues = {
   groundName: string;
-  month: Dayjs;
+  months: Dayjs[];
   days: number[];
   startTime: Dayjs;
   endTime: Dayjs;
@@ -68,26 +61,11 @@ type ReleaseSlotsFormValues = {
 
 type ReleasedSlotsSummary = {
   groundName: string;
-  month: Dayjs;
+  months: Dayjs[];
   days: number[];
   startTime: Dayjs;
   endTime: Dayjs;
   myTeamId: number;
-};
-
-type PlayerExpenseReportRow = {
-  player_id: number;
-  player_name: string;
-  last_deposit_amount: number;
-  remaining_balance: number;
-  matches: PlayerExpenseReportMatch[];
-};
-
-type PlayerExpenseReportMatch = {
-  match_id: number;
-  match_date: string;
-  amount: number;
-  opponent_team_name: string;
 };
 
 const emptySummary: DashboardSummary = {
@@ -150,15 +128,11 @@ const formatCurrency = (amount: number): string =>
 const formatNumber = (value: number): string =>
   new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value);
 
-const formatShortDate = (date: string): string => dayjs(date).format("DD MMM");
-const getMonthKey = (date: string): string => dayjs(date).format("YYYY-MM");
-
 export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [summary, setSummary] = useState<DashboardSummary>(emptySummary);
   const [allSelectionPlayers, setAllSelectionPlayers] = useState<Player[]>([]);
   const [playerExpenseSummary, setPlayerExpenseSummary] = useState<PlayerExpenseSummary | null>(null);
-  const [playerDeposits, setPlayerDeposits] = useState<PlayerDeposit[]>([]);
   const [scheduledMatches, setScheduledMatches] = useState<Match[]>([]);
   const [settledMatches, setSettledMatches] = useState<SettledMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,9 +140,6 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportMonth, setReportMonth] = useState<Dayjs>(dayjs());
-  const [expandedReportPlayerIds, setExpandedReportPlayerIds] = useState<Key[]>([]);
   const [isReleaseSlotsModalOpen, setIsReleaseSlotsModalOpen] = useState(false);
   const [releasedSlotsSummary, setReleasedSlotsSummary] = useState<ReleasedSlotsSummary | null>(
     null
@@ -188,7 +159,6 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
         summaryResponse,
         allSelectionPlayersResponse,
         playerExpenseSummaryResponse,
-        playerDepositsResponse,
         scheduledMatchesResponse,
         settledMatchesResponse
       ] = await Promise.all([
@@ -196,7 +166,6 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
         dashboardService.getSummary(),
         playerService.getPlayers({ teamId: ALL_SELECTION_TEAM_ID }),
         playerExpenseService.getSummary(),
-        playerExpenseService.getDeposits(),
         matchService.getScheduledMatches(),
         matchService.getSettledMatches()
       ]);
@@ -205,7 +174,6 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
       setSummary(summaryResponse.data);
       setAllSelectionPlayers(allSelectionPlayersResponse.data);
       setPlayerExpenseSummary(playerExpenseSummaryResponse.data);
-      setPlayerDeposits(playerDepositsResponse.data);
       setScheduledMatches(scheduledMatchesResponse.data);
       setSettledMatches(settledMatchesResponse.data);
     } catch (error) {
@@ -329,97 +297,30 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
     [allSelectionPlayers, playerExpenseSummary?.players, scheduledMatches, summary.team_wise_summary]
   );
 
-  const reportMonthKey = reportMonth.format("YYYY-MM");
-
-  const playerExpenseReportRows = useMemo<PlayerExpenseReportRow[]>(() => {
-    const reportMatches = (playerExpenseSummary?.matches ?? []).filter(
-      (match) => getMonthKey(match.match_date) === reportMonthKey
-    );
-    const reportMatchById = new Map(reportMatches.map((match) => [match.match_id, match]));
-    const reportMatchIds = new Set(reportMatches.map((match) => match.match_id));
-
-    const depositsByPlayer = playerDeposits.reduce((playerDepositMap, deposit) => {
-      if (getMonthKey(deposit.deposit_date) !== reportMonthKey) {
-        return playerDepositMap;
-      }
-
-      const deposits = playerDepositMap.get(deposit.player_id) ?? [];
-      deposits.push(deposit);
-      playerDepositMap.set(deposit.player_id, deposits);
-
-      return playerDepositMap;
-    }, new Map<number, PlayerDeposit[]>());
-
-    return (playerExpenseSummary?.players ?? [])
-      .map((player) => {
-        const monthlyDeposits = depositsByPlayer.get(player.player_id) ?? [];
-        const lastDeposit = monthlyDeposits
-          .slice()
-          .sort((first, second) => {
-            const dateComparison =
-              dayjs(second.deposit_date).valueOf() - dayjs(first.deposit_date).valueOf();
-
-            return dateComparison || second.id - first.id;
-          })[0];
-        const totalDeposit = monthlyDeposits.reduce(
-          (total, deposit) => total + Number(deposit.amount ?? 0),
-          0
-        );
-        const matches = player.match_expenses
-          .filter(
-            (matchExpense) =>
-              reportMatchIds.has(matchExpense.match_id) && Number(matchExpense.amount ?? 0) !== 0
-          )
-          .map((matchExpense) => {
-            const match = reportMatchById.get(matchExpense.match_id);
-
-            return {
-              match_id: matchExpense.match_id,
-              match_date: match?.match_date ?? "",
-              amount: Number(matchExpense.amount ?? 0),
-              opponent_team_name: match?.opponent_team_name ?? "-"
-            };
-          })
-          .sort(
-            (first, second) =>
-              dayjs(first.match_date).valueOf() - dayjs(second.match_date).valueOf()
-          );
-        const totalMatchExpense = matches.reduce((total, match) => total + match.amount, 0);
-
-        return {
-          player_id: player.player_id,
-          player_name: player.player_name,
-          last_deposit_amount: Number(lastDeposit?.amount ?? 0),
-          remaining_balance: totalDeposit - totalMatchExpense,
-          matches
-        };
-      })
-      .sort((first, second) => first.player_name.localeCompare(second.player_name));
-  }, [playerDeposits, playerExpenseSummary?.matches, playerExpenseSummary?.players, reportMonthKey]);
-
-  const releasedSlotItems = useMemo(() => {
+  const releasedSlotGroups = useMemo(() => {
     if (!releasedSlotsSummary) {
       return [];
     }
 
-    const daysInMonth = releasedSlotsSummary.month.daysInMonth();
+    return releasedSlotsSummary.months.map((month) => {
+      const daysInMonth = month.daysInMonth();
+      const slots = Array.from({ length: daysInMonth }, (_, index) => month.date(index + 1))
+        .filter((date) => releasedSlotsSummary.days.includes(date.day()))
+        .map((date) => {
+          const isBooked = allMatches.some(
+            (match) =>
+              match.my_team_id === releasedSlotsSummary.myTeamId &&
+              dayjs(match.match_date).isSame(date, "day")
+          );
 
-    return Array.from({ length: daysInMonth }, (_, index) =>
-      releasedSlotsSummary.month.date(index + 1)
-    )
-      .filter((date) => releasedSlotsSummary.days.includes(date.day()))
-      .map((date) => {
-        const isBooked = allMatches.some(
-          (match) =>
-            match.my_team_id === releasedSlotsSummary.myTeamId &&
-            dayjs(match.match_date).isSame(date, "day")
-        );
+          return {
+            date,
+            status: isBooked ? "Booked" : "Available"
+          };
+        });
 
-        return {
-          date,
-          status: isBooked ? "Booked" : "Available"
-        };
-      });
+      return { month, slots };
+    });
   }, [allMatches, releasedSlotsSummary]);
 
   const openAddTeamModal = (): void => {
@@ -478,7 +379,7 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
 
     releaseSlotsForm.setFieldsValue({
       groundName: "",
-      month: dayjs(),
+      months: [dayjs()],
       days: [6, 0],
       startTime: dayjs("07:00:00", "HH:mm:ss"),
       endTime: dayjs("10:00:00", "HH:mm:ss"),
@@ -502,82 +403,20 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
 
     setReleasedSlotsSummary({
       groundName: values.groundName.trim(),
-      month: values.month,
+      months: Array.from(
+        new Map(
+          values.months
+            .map((month) => month.startOf("month"))
+            .sort((first, second) => first.valueOf() - second.valueOf())
+            .map((month) => [month.format("YYYY-MM"), month])
+        ).values()
+      ),
       days: values.days,
       startTime: values.startTime,
       endTime: values.endTime,
       myTeamId: values.myTeamId
     });
   };
-
-  const toggleReportPlayer = (playerId: number): void => {
-    setExpandedReportPlayerIds((currentPlayerIds) =>
-      currentPlayerIds.includes(playerId)
-        ? currentPlayerIds.filter((currentPlayerId) => currentPlayerId !== playerId)
-        : [...currentPlayerIds, playerId]
-    );
-  };
-
-  const reportColumns: TableProps<PlayerExpenseReportRow>["columns"] = [
-    {
-      title: "Player Name",
-      dataIndex: "player_name",
-      key: "player_name",
-      align: "center",
-      render: (playerName: string) => <Text strong>{playerName}</Text>
-    },
-    {
-      title: "Last Deposit Amount",
-      dataIndex: "last_deposit_amount",
-      key: "last_deposit_amount",
-      align: "center",
-      render: (amount: number) => (
-        <Text className="player-expense-page__positive">{formatCurrency(amount)}</Text>
-      )
-    },
-    {
-      title: "Remaining Balance",
-      dataIndex: "remaining_balance",
-      key: "remaining_balance",
-      align: "center",
-      render: (playerRemainingBalance: number) => (
-        <Tag
-          className={
-            playerRemainingBalance < 0
-              ? "player-expense-page__balance-tag player-expense-page__balance-tag--negative"
-              : "player-expense-page__balance-tag"
-          }
-        >
-          {formatCurrency(playerRemainingBalance)}
-        </Tag>
-      )
-    }
-  ];
-
-  const reportMatchColumns: TableProps<PlayerExpenseReportMatch>["columns"] = [
-    {
-      title: "Date",
-      dataIndex: "match_date",
-      key: "match_date",
-      align: "center",
-      render: (matchDate: string) => (matchDate ? formatShortDate(matchDate) : "-")
-    },
-    {
-      title: "Match Fees",
-      dataIndex: "amount",
-      key: "amount",
-      align: "center",
-      render: (amount: number) => (
-        <Text className="player-expense-page__negative">-{formatCurrency(amount)}</Text>
-      )
-    },
-    {
-      title: "Opponent Name",
-      dataIndex: "opponent_team_name",
-      key: "opponent_team_name",
-      align: "center"
-    }
-  ];
 
   return (
     <section className="dashboard-page">
@@ -587,14 +426,6 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
         <Space>
           <Button icon={<ReloadOutlined />} loading={isLoading} size="large" onClick={loadDashboard}>
             Refresh
-          </Button>
-          <Button
-            className="player-expense-page__report-button"
-            icon={<FileTextOutlined />}
-            size="large"
-            onClick={() => setIsReportModalOpen(true)}
-          >
-            View Player Reports
           </Button>
           <Button
             className="matches-page__release-button"
@@ -793,80 +624,6 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
       </Spin>
 
       <Modal
-        className="player-expense-page__report-modal"
-        footer={null}
-        open={isReportModalOpen}
-        title="Player Expense Reports"
-        width={920}
-        onCancel={() => setIsReportModalOpen(false)}
-      >
-        <div className="player-expense-page__report-toolbar">
-          <DatePicker
-            allowClear={false}
-            className="player-expense-page__report-month"
-            format="MMMM YYYY"
-            picker="month"
-            value={reportMonth}
-            onChange={(month) => setReportMonth(month ?? dayjs())}
-          />
-        </div>
-        <Table<PlayerExpenseReportRow>
-          columns={reportColumns}
-          dataSource={playerExpenseReportRows}
-          expandable={{
-            expandRowByClick: true,
-            expandedRowClassName: () => "player-expense-page__report-expanded-row",
-            expandedRowRender: (player) =>
-              player.matches.length > 0 ? (
-                <Table<PlayerExpenseReportMatch>
-                  className="player-expense-page__report-details-table"
-                  columns={reportMatchColumns}
-                  dataSource={player.matches}
-                  pagination={false}
-                  rowKey="match_id"
-                  size="small"
-                />
-              ) : (
-                <Empty
-                  description="No matches played for this month"
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
-              ),
-            expandedRowKeys: expandedReportPlayerIds,
-            onExpand: (expanded, player) =>
-              setExpandedReportPlayerIds((currentPlayerIds) =>
-                expanded
-                  ? [...currentPlayerIds, player.player_id]
-                  : currentPlayerIds.filter((playerId) => playerId !== player.player_id)
-              ),
-            rowExpandable: () => true
-          }}
-          loading={isLoading}
-          locale={{
-            emptyText: (
-              <Empty
-                description="No player expense reports found"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            )
-          }}
-          onRow={(player) => ({
-            onKeyDown: (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                toggleReportPlayer(player.player_id);
-              }
-            },
-            tabIndex: 0
-          })}
-          pagination={false}
-          rowClassName="player-expense-page__report-row"
-          rowKey="player_id"
-          scroll={{ y: 560 }}
-        />
-      </Modal>
-
-      <Modal
         footer={null}
         open={isReleaseSlotsModalOpen}
         title="Release slots for opponent checking"
@@ -892,13 +649,14 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
               <Input placeholder="Enter ground name" />
             </Form.Item>
             <Form.Item
-              label="Select Month"
-              name="month"
-              rules={[{ required: true, message: "Please select month" }]}
+              label="Select Months"
+              name="months"
+              rules={[{ required: true, message: "Please select at least one month" }]}
             >
               <DatePicker
                 className="matches-page__full-control"
                 format="MMMM YYYY"
+                multiple
                 picker="month"
               />
             </Form.Item>
@@ -952,32 +710,34 @@ export const HomePage = ({ onNavigate }: AppRouteProps): JSX.Element => {
               <strong ref={releaseSummaryTitleRef} tabIndex={0}>
                 Looking For opponent on below dates
               </strong>
-              <div className="matches-page__release-summary-meta">
-                <Text tabIndex={0} strong>
-                  {releasedSlotsSummary.month.format("MMMM YYYY")}
-                </Text>
-                <Text tabIndex={0} strong>
-                  Slot Timing {releasedSlotsSummary.startTime.format("hh:mm A")} -{" "}
-                  {releasedSlotsSummary.endTime.format("hh:mm A")}
-                </Text>
-                <Text tabIndex={0} strong>
-                  Ground {releasedSlotsSummary.groundName}
-                </Text>
-              </div>
             </div>
-            <div className="matches-page__release-slots-grid">
-              {releasedSlotItems.map((item) => (
-                <div
-                  className={`matches-page__release-slot-card ${
-                    item.status === "Booked"
-                      ? "matches-page__release-slot-card--booked"
-                      : "matches-page__release-slot-card--available"
-                  }`}
-                  key={item.date.format("YYYY-MM-DD")}
-                >
-                  <span>{item.date.format("ddd")}</span>
-                  <strong>{item.date.format("DD MMM")}</strong>
-                  <em>{item.status}</em>
+            <div className="matches-page__release-month-groups">
+              {releasedSlotGroups.map((group) => (
+                <div className="matches-page__release-month-group" key={group.month.format("YYYY-MM")}>
+                  <strong>{group.month.format("MMMM YYYY")}</strong>
+                  <div className="matches-page__release-month-meta">
+                    <Text strong>
+                      Slot Timing {releasedSlotsSummary.startTime.format("hh:mm A")} -{" "}
+                      {releasedSlotsSummary.endTime.format("hh:mm A")}
+                    </Text>
+                    <Text strong>Ground {releasedSlotsSummary.groundName}</Text>
+                  </div>
+                  <div className="matches-page__release-slots-grid">
+                    {group.slots.map((item) => (
+                      <div
+                        className={`matches-page__release-slot-card ${
+                          item.status === "Booked"
+                            ? "matches-page__release-slot-card--booked"
+                            : "matches-page__release-slot-card--available"
+                        }`}
+                        key={item.date.format("YYYY-MM-DD")}
+                      >
+                        <span>{item.date.format("ddd")}</span>
+                        <strong>{item.date.format("DD MMM")}</strong>
+                        <em>{item.status}</em>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

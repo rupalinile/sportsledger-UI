@@ -2,7 +2,7 @@ export type MatchSlotStatus = "GROUND_BOOKED" | "SLOT_BOOKED";
 export type MatchSlotPayloadStatus = MatchSlotStatus;
 
 export type MatchPaymentStatus = "PENDING" | "PAID" | "RECEIVED";
-export type MatchPaymentPayloadStatus = "PENDING" | "PAID";
+export type MatchPaymentPayloadStatus = MatchPaymentStatus;
 
 export type MatchStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 
